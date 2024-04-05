@@ -7,3 +7,4 @@ from .mouse import Mouse
 from .ray_tracing import RayTracing
 from .navigation import Navigation
 from .util import create_hexagon
+from .environment import Environment

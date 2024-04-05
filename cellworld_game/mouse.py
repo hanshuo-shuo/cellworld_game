@@ -1,3 +1,4 @@
+import math
 import typing
 
 import pygame
@@ -31,6 +32,7 @@ class Mouse(NavigationAgent):
         self.puff_cool_down_time = puff_cool_down_time
         self.observation = None
         self.finished = False
+        self.puffed = False
 
     def get_observation(self):
         return self.observation
@@ -38,39 +40,32 @@ class Mouse(NavigationAgent):
     def parse_observation(self, observation: dict):
         goal_distance = distance(self.goal_location, observation["agent_states"]["prey"][0])
         self.finished = goal_distance <= self.goal_threshold
+        parsed_observation = [observation["agent_states"]["prey"][0][0],
+                              observation["agent_states"]["prey"][0][1],
+                              math.radians(observation["agent_states"]["prey"][1])]
+
         if observation["agent_states"]["predator"][0]:
             predator_distance = distance(observation["agent_states"]["prey"][0],
                                          observation["agent_states"]["predator"][0])
             if self.puff_threshold <= 0:
-                puff = predator_distance <= self.puff_threshold
+                self.puffed = predator_distance <= self.puff_threshold
                 self.puff_cool_down = self.puff_cool_down_time
             else:
-                puff = False
-            parsed_observation = (observation["agent_states"]["prey"][0][0],
-                                  observation["agent_states"]["prey"][0][1],
-                                  observation["agent_states"]["prey"][1],
-                                  observation["agent_states"]["predator"][0][0],
-                                  observation["agent_states"]["predator"][0][1],
-                                  observation["agent_states"]["predator"][1],
-                                  goal_distance,
-                                  self.finished,
-                                  predator_distance,
-                                  puff,
-                                  observation["walls"][:3]
-                                  )
+                self.puffed = False
+                parsed_observation.append(observation["agent_states"]["predator"][0][0])
+                parsed_observation.append(observation["agent_states"]["predator"][0][1])
+                parsed_observation.append(math.radians(observation["agent_states"]["predator"][1]))
+                parsed_observation.append(goal_distance)
+                parsed_observation.append(predator_distance)
         else:
-            parsed_observation = (observation["agent_states"]["prey"][0][0],
-                                  observation["agent_states"]["prey"][0][1],
-                                  observation["agent_states"]["prey"][1],
-                                  None,
-                                  None,
-                                  None,
-                                  goal_distance,
-                                  self.finished,
-                                  None,
-                                  None,
-                                  observation["walls"][:3]
-                                  )
+            parsed_observation += [0,
+                                   0,
+                                   0,
+                                   goal_distance,
+                                   0]
+
+        parsed_observation += [o[0] for o in observation["walls"][:3]]
+        parsed_observation += [math.radians(o[1]) for o in observation["walls"][:3]]
         return parsed_observation
 
     def reset(self):

@@ -1,7 +1,7 @@
 import random
 import time
 from cellworld_game import *
-from cellworld_loader import CellWorldLoader
+from cellworld_game.cellworld_loader import CellWorldLoader
 
 loader = CellWorldLoader(world_name="21_05")
 
@@ -41,6 +41,7 @@ post_observation = prey.get_observation()
 last_action_time = time.time() - 3
 while not prey.finished:
     pre_observation = post_observation
+    print(pre_observation)
     view.draw()
     if time.time() - last_action_time >= 3:
         # decision
