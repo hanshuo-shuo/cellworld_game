@@ -32,7 +32,10 @@ prey = Mouse(start_state=AgentState(location=(.05, .5),
              actions=loader.full_action_list)
 
 model.add_agent("prey", prey)
+
 view = View(model=model)
+
+
 model.reset()
 post_observation = prey.get_observation()
 last_action_time = time.time() - 3
@@ -40,7 +43,11 @@ while not prey.finished:
     pre_observation = post_observation
     view.draw()
     if time.time() - last_action_time >= 3:
-        prey.set_action(random.randint(0, len(loader.full_action_list) - 1))
+        # decision
+        action_number = random.randint(0, len(loader.full_action_list) - 1)
+        prey.set_action(action_number)
         last_action_time = time.time()
     model.step()
     post_observation = prey.get_observation()
+    # learning Gradient Descent
+
