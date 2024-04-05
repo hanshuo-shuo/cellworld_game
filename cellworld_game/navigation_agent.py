@@ -8,8 +8,8 @@ class NavigationAgent(Agent):
 
     def __init__(self,
                  navigation: Navigation,
-                 max_forward_speed: float = 0.001,
-                 max_turning_speed: float = 0.01,
+                 max_forward_speed: float = 0.005,
+                 max_turning_speed: float = 0.25,
                  threshold: float = 0.01):
         self.max_forward_speed = max_forward_speed
         self.max_turning_speed = max_turning_speed
@@ -19,12 +19,14 @@ class NavigationAgent(Agent):
         self.next_step = None
         self.path = []
         Agent.__init__(self)
+        self.collision = False
 
     def set_destination(self, destination):
         self.destination = destination
         self.path = self.navigation.get_path(src=self.state.location, dst=self.destination)
         if self.path:
             self.next_step = self.path[0]
+            self.path.pop(0)
         else:
             self.next_step = None
         print("path", self.path)
@@ -37,8 +39,8 @@ class NavigationAgent(Agent):
     def start(self, observation: dict):
         Agent.start(self, observation)
 
-    def step(self, delta_t: float, observation: dict):
-
+    def navigate(self, delta_t: float):
+        print("navigating")
         if self.next_step is not None:
             distance_error = distance(src=self.state.location,
                                       dst=self.next_step)
@@ -68,6 +70,3 @@ class NavigationAgent(Agent):
         else:
             self.dynamics.forward_speed = 0
             self.dynamics.turn_speed = 0
-
-        Agent.step(self, delta_t, observation)
-

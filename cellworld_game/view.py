@@ -12,7 +12,8 @@ class View(object):
         self.model = model
         self.visibility = model.visibility
         self.screen_width = screen_width
-        self.screen_height = int((math.sqrt(3) / 2) * screen_width)
+        self.hexa_ratio = (math.sqrt(3) / 2)
+        self.screen_height = int(self.hexa_ratio * screen_width)
         self.flip_y = flip_y
         self.screen_offset = (self.screen_width - self.screen_height) / 2
         self.screen_size = (screen_width, self.screen_height)
@@ -38,8 +39,9 @@ class View(object):
         return screen_x, screen_y
 
     def to_canonical(self, screen_x: int, screen_y: int):
+        y = self.screen_height - screen_y + self.screen_offset
+        canonical_y = y / self.screen_height * self.hexa_ratio
         canonical_x = screen_x / self.screen_width
-        canonical_y = 1-((screen_y + self.screen_offset) / self.screen_height)
         return canonical_x, canonical_y
 
     def draw_polygon(self, polygon, color):
@@ -83,15 +85,15 @@ class View(object):
                                                                            direction=visibility_perspective.direction,
                                                                            view_field=360)
             self.draw_polygon(visibility_polygon, (180, 180, 180))
-            font_size = 24
-            font = pygame.font.Font(None, font_size)
-            for i, v in enumerate(a):
-                text_surface = font.render(str(i), True, (0, 0, 255), (0,0,0))
-                pygame.draw.line(self.screen,
-                                 (0, 0, 255),
-                                 (self.screen_width/2, self.screen_height/2),
-                                 self.from_canonical((v.x,v.y)), 3)
-                self.screen.blit(text_surface, self.from_canonical((v.x,v.y)))
+            # font_size = 24
+            # font = pygame.font.Font(None, font_size)
+            # for i, v in enumerate(a):
+            #     text_surface = font.render(str(i), True, (0, 0, 255), (0,0,0))
+            #     pygame.draw.line(self.screen,
+            #                      (0, 0, 255),
+            #                      (self.screen_width/2, self.screen_height/2),
+            #                      self.from_canonical((v.x,v.y)), 3)
+            #     self.screen.blit(text_surface, self.from_canonical((v.x,v.y)))
             # for i, v in enumerate(visibility_polygon.exterior.coords):
             #     text_surface = font.render(str(i), True, (0,0,255), (0,0,0))
             #     pygame.draw.line(self.screen,
@@ -109,16 +111,15 @@ class View(object):
             else:
                 self.draw_polygon(self.model.agents[name].get_polygon(), color=self.agent_colors[name])
 
-
-        if self.target:
-            self.draw_points([sp.Point(self.target)], color=(255, 0, 0), size=3)
+        if self.model.agents["predator"].path:
+            self.draw_points([sp.Point(s) for s in self.model.agents["predator"].path], color=(255, 0, 0), size=3)
 
         if self.screen_target:
-            self.draw_points([sp.Point(self.screen_target)], color=(255, 0, 255), size=3)
-
-        if self.model.agents["prey"].next_step:
-            self.draw_points([sp.Point(self.model.agents["prey"].next_step)], color="blue", size=3)
-
+            pygame.draw.circle(surface=self.screen,
+                               color=(255, 0, 255),
+                               center=self.screen_target,
+                               radius=3,
+                               width=2)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -143,17 +144,17 @@ class View(object):
             self.show_sprites = False
         if keys[pygame.K_4]:
             self.show_sprites = True
-        if keys[pygame.K_w]:
-            self.model.agents["prey"].dynamics.forward_speed = .005
-        elif keys[pygame.K_s]:
-            self.model.agents["prey"].dynamics.forward_speed = -.005
-        else:
-            self.model.agents["prey"].dynamics.forward_speed = 0
-        if keys[pygame.K_a]:
-            self.model.agents["prey"].dynamics.turn_speed = 2
-        elif keys[pygame.K_d]:
-            self.model.agents["prey"].dynamics.turn_speed = -2
-        else:
-            self.model.agents["prey"].dynamics.turn_speed = 0
+        # if keys[pygame.K_w]:
+        #     self.model.agents["prey"].dynamics.forward_speed = .005
+        # elif keys[pygame.K_s]:
+        #     self.model.agents["prey"].dynamics.forward_speed = -.005
+        # else:
+        #     self.model.agents["prey"].dynamics.forward_speed = 0
+        # if keys[pygame.K_a]:
+        #     self.model.agents["prey"].dynamics.turn_speed = 2
+        # elif keys[pygame.K_d]:
+        #     self.model.agents["prey"].dynamics.turn_speed = -2
+        # else:
+        #     self.model.agents["prey"].dynamics.turn_speed = 0
         pygame.display.flip()
 

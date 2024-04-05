@@ -33,4 +33,16 @@ class CellWorldLoader:
                                           arena_transformation.rotation + cell_transformation.rotation)
                            for cell
                            in self.world.cells.occluded_cells()]
+        spawn_cells = cw.Cell_group_builder.get_from_name("hexagonal",
+                                                          world_name,
+                                                          "spawn_locations")
+        self.robot_start_locations = [tuple(self.world.cells[sc].location.get_values()) for sc in spawn_cells]
+        self.full_action_list = self.open_locations
+
+        lppo_cells = cw.Cell_group_builder.get_from_name("hexagonal",
+                                                          world_name,
+                                                          "lppo")
+
+        self.tlppo_action_list = [tuple(self.world.cells[sc].location.get_values()) for sc in lppo_cells]
+
 

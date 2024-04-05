@@ -12,14 +12,18 @@ from .util import distance
 class Mouse(NavigationAgent):
     def __init__(self,
                  start_state: AgentState,
+                 actions: typing.List[typing.Tuple[float, float]],
                  goal_location: typing.Tuple[float, float],
                  goal_threshold: float,
                  puff_threshold: float,
                  puff_cool_down_time: float,
                  navigation: Navigation):
         NavigationAgent.__init__(self,
-                                 navigation=navigation)
+                                 navigation=navigation,
+                                 max_forward_speed=0.05,
+                                 max_turning_speed=2.0)
         self.start_state = start_state
+        self.actions = actions
         self.goal_location = goal_location
         self.goal_threshold = goal_threshold
         self.puff_threshold = puff_threshold
@@ -85,9 +89,7 @@ class Mouse(NavigationAgent):
     def step(self, delta_t: float, observation: dict):
         self.observation = self.parse_observation(observation=observation)
         self.puff_cool_down -= delta_t
-        NavigationAgent.step(self,
-                             delta_t=delta_t,
-                             observation=observation)
+        self.navigate(delta_t=delta_t)
 
     @staticmethod
     def create_sprite() -> pygame.Surface:
@@ -98,4 +100,7 @@ class Mouse(NavigationAgent):
     @staticmethod
     def create_polygon() -> sp.Polygon:
         return sp.Polygon([(.015, 0), (0, 0.005), (-.015, 0), (0, -0.005)])
+
+    def set_action(self, action_number: int):
+        self.set_destination(self.actions[action_number])
 

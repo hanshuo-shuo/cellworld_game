@@ -8,7 +8,11 @@ from .visibility import Visibility
 
 class Model(object):
 
-    def __init__(self, arena, occlusions, real_time: bool = False, time_step: float = 0.1):
+    def __init__(self,
+                 arena,
+                 occlusions,
+                 real_time: bool = False,
+                 time_step: float = 0.1):
         self.arena = arena
         self.occlusions = occlusions
         self.real_time = real_time
@@ -28,12 +32,13 @@ class Model(object):
             agent.start(observation=observations[name])
         self.last_step = time.time()
 
-    def is_valid_state(self, agent_polygon: sp.Polygon) -> bool:
+    def is_valid_state(self, agent_polygon: sp.Polygon, collisions: bool) -> bool:
         if not self.arena.contains(agent_polygon):
             return False
-        for occlusion in self.occlusions:
-            if agent_polygon.intersects(occlusion):
-                return False
+        if collisions:
+            for occlusion in self.occlusions:
+                if agent_polygon.intersects(occlusion):
+                    return False
         return True
 
     def wall_direction(self, src: typing.Tuple[float, float], wall_number: int):
@@ -71,7 +76,7 @@ class Model(object):
 
     def step(self):
         if self.real_time:
-            while self.last_step + self.time_step < time.time():
+            while self.last_step + self.time_step > time.time():
                 pass
 
         self.last_step = time.time()
@@ -81,19 +86,22 @@ class Model(object):
             new_state = agent.state.update(rotation=rotation,
                                            distance=distance)
             agent_polygon = agent.get_polygon(state=new_state)
-            if self.is_valid_state(agent_polygon):
+            if self.is_valid_state(agent_polygon=agent_polygon,
+                                   collisions=agent.collision):
                 agent.state = new_state
             else: #try only rotation
                 new_state = agent.state.update(rotation=rotation,
                                                distance=0)
                 agent_polygon = agent.get_polygon(state=new_state)
-                if self.is_valid_state(agent_polygon):
+                if self.is_valid_state(agent_polygon=agent_polygon,
+                                       collisions=agent.collision):
                     agent.state = new_state
                 else: #try only translation
                     new_state = agent.state.update(rotation=0,
                                                    distance=distance)
                     agent_polygon = agent.get_polygon(state=new_state)
-                    if self.is_valid_state(agent_polygon):
+                    if self.is_valid_state(agent_polygon=agent_polygon,
+                                           collisions=agent.collision):
                         agent.state = new_state
         observations = self.get_observations()
         for name, agent in self.agents.items():

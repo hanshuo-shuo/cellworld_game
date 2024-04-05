@@ -40,7 +40,9 @@ class AgentDynamics(object):
 
 class Agent(object):
 
-    def __init__(self, view_field: float = 180):
+    def __init__(self,
+                 view_field: float = 180,
+                 collision: bool = True):
         self.view_field = view_field
         self.state: AgentState = AgentState()
         self.dynamics: AgentDynamics = AgentDynamics(forward_speed=0,
@@ -48,6 +50,7 @@ class Agent(object):
         self.polygon = self.create_polygon()
         sprite = self.create_sprite()
         self.sprite = pygame.transform.scale(sprite, (75, 75))
+        self.collision = collision
         self.on_reset = None
         self.on_step = None
         self.on_start = None
