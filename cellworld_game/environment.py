@@ -17,7 +17,7 @@ class Environment(Env):
                  use_predator: bool,
                  max_step: int = 200,
                  reward_function=lambda x: 0,
-                 step_wait: int = 5):
+                 step_wait: int = 2):
         self.max_step = max_step
         self.reward_function = reward_function
         self.step_wait = step_wait
@@ -67,7 +67,7 @@ class Environment(Env):
         reward = self.reward_function(obs)
         return obs, reward, self.prey.finished, truncated, {}
 
-    def reset(self):
+    def reset(self, seed=None):
         self.step_count = 0
         self.model.reset()
         obs = self.prey.get_observation()
