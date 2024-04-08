@@ -6,37 +6,25 @@ import shapely as sp
 
 class Navigation:
     def __init__(self,
-                 locations: typing.List[typing.Tuple[float, float]],
+                 locations: typing.List[typing.Optional[typing.Tuple[float, float]]],
                  paths: typing.List[typing.List[int]],
-                 visibility: Visibility):
-        self.locations: typing.List[typing.Tuple[float, float]] = locations
-        self.paths: typing.List[typing.List[int]] = paths
-        self.visibility: Visibility = visibility
+                 visibility: typing.List[typing.List[typing.List[int]]]):
+        self.locations = locations
+        self.paths = paths
+        self.visibility = visibility
 
     def closest_location(self,
                          location: typing.Tuple[float, float]) -> int:
         min_dist2 = math.inf
         closest = None
         for i, l in enumerate(self.locations):
+            if l is None:
+                continue
             dist2 = (l[0] - location[0]) ** 2 + (l[1] - location[1]) ** 2
             if dist2 < min_dist2:
                 closest = i
                 min_dist2 = dist2
         return closest
-
-    def clear_path(self, src, path):
-        clear_path = []
-        last_step = src
-        src_point = sp.Point(last_step)
-        walls_by_distance = self.visibility.walls_by_distance(src_point)
-        for step in path:
-            if not self.visibility.line_of_side(src=src_point, dst=sp.Point(step), walls_by_distance=walls_by_distance):
-                clear_path.append(last_step)
-                src_point = sp.Point(last_step)
-                walls_by_distance = self.visibility.walls_by_distance(src_point)
-            last_step = step
-        clear_path.append(path[-1])
-        return clear_path
 
     def get_path(self,
                  src: typing.Tuple[float, float],
@@ -44,14 +32,16 @@ class Navigation:
         src_index = self.closest_location(location=src)
         dst_index = self.closest_location(location=dst)
         current = src_index
-        path_indexes = [current]
+        last_step = src_index
+        path_indexes = [last_step]
         while current is not None and current != dst_index:
-            next = self.paths[current][dst_index]
-            if next == current:
+            next_step = self.paths[current][dst_index]
+            if next_step == current:
                 break
-            current = next
-            path_indexes.append(current)
-        return self.clear_path(src=src,
-                               path=[self.locations[step_index]
-                                     for step_index
-                                     in path_indexes])
+            is_visible = next_step in self.visibility[last_step]
+            if not is_visible:
+                path_indexes.append(current)
+                last_step = current
+            current = next_step
+        path_indexes.append(dst_index)
+        return [self.locations[s] for s in path_indexes]
